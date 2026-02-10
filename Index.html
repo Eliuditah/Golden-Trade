@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GOLDEN TRADE | Professional Exchange</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Premium Gold & Dark Styling */
+        body { background-color: #050505; color: #E5E5E5; font-family: 'Inter', sans-serif; }
+        .gold-glow { text-shadow: 0 0 10px rgba(243, 186, 47, 0.5); }
+        .gold-border { border: 1px solid #bf953f; }
+        .bg-gold-gradient { background: linear-gradient(135deg, #bf953f, #fcf6ba, #aa771c); }
+        
+        /* Moving Crypto Background Animation */
+        @keyframes drift {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(20px, 50px) rotate(10deg); }
+        }
+        .crypto-bg { position: fixed; opacity: 0.05; z-index: -1; animation: drift 10s ease-in-out infinite alternate; }
+    </style>
+</head>
+<body class="overflow-hidden h-screen flex flex-col">
+
+    <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="crypto-bg w-40 top-10 left-10">
+    <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="crypto-bg w-32 bottom-20 right-20" style="animation-delay: 2s;">
+
+    <nav class="flex justify-between items-center px-8 py-4 bg-black/80 border-b border-yellow-900/30">
+        <h1 class="text-3xl font-black tracking-tighter bg-gold-gradient bg-clip-text text-transparent">GOLDEN TRADE</h1>
+        <div class="flex gap-4">
+            <div class="text-right mr-6">
+                <span class="text-[10px] text-gray-500 uppercase tracking-widest">Live BTC/USDT</span>
+                <p id="live-price" class="text-xl font-mono text-yellow-500 font-bold">$0.00</p>
+            </div>
+            <button onclick="handleDeposit()" class="bg-gold-gradient text-black font-bold px-6 py-2 rounded shadow-lg hover:brightness-110">Binance Deposit</button>
+        </div>
+    </nav>
+
+    <main class="flex-1 grid grid-cols-12 gap-1 p-2">
+        <section class="col-span-9 bg-[#0b0e11] rounded p-2 gold-border relative">
+            <div id="tradingview_widget" class="w-full h-full"></div>
+        </section>
+
+        <aside class="col-span-3 flex flex-col gap-2">
+            <div class="bg-[#0b0e11] p-6 rounded gold-border flex-1">
+                <h3 class="text-yellow-500 font-bold mb-4 uppercase text-sm border-b border-yellow-900/50 pb-2">Execution</h3>
+                <label class="text-xs text-gray-500">Order Amount (USDT)</label>
+                <input type="number" class="w-full bg-black border border-gray-800 p-3 rounded mt-2 mb-6 outline-none focus:border-yellow-600 font-bold text-xl" placeholder="0.00">
+                <button class="w-full bg-green-600 hover:bg-green-500 py-4 rounded font-black text-lg mb-2">BUY</button>
+                <button class="w-full bg-red-600 hover:bg-red-500 py-4 rounded font-black text-lg">SELL</button>
+            </div>
+        </aside>
+    </main>
+
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        // Initialize real-time chart
+        new TradingView.widget({
+            "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1",
+            "timezone": "Etc/UTC", "theme": "dark", "style": "1", "container_id": "tradingview_widget"
+        });
+
+        // WebSocket for Live Ticker (Top Bar)
+        const ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@ticker");
+        ws.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            document.getElementById('live-price').innerText = `$${parseFloat(data.c).toLocaleString()}`;
+        };
+
+        // Deposit Connection
+        async function handleDeposit() {
+            const amount = prompt("Amount to deposit (USDT):", "100");
+            const response = await fetch('/api/pay', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ amount })
+            });
+            const data = await response.json();
+            if(data.checkoutUrl) window.location.href = data.checkoutUrl;
+        }
+    </script>
+</body>
+</html>
